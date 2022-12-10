@@ -17,11 +17,7 @@
 
     <div v-if="(table != null)">
       <div v-for="item in table" :key="item.name" class="row align-items-center pb-3 justify-content-evenly">
-        <div :id="'members'+item[0].id" :class="[
-          {'text-bg-success': item[0].is_winner == '1'},
-          {'text-bg-danger': item[2].is_winner == '1'},
-          {'versus first': item[0].id == '1'},
-          'card col-3 d-flex flex-row p-2']">
+        <div :id="'members'+item[0].id" ref="leftMembers" :class="['card col-3 d-flex flex-row p-2']">
           <img class="rounded" :src="item[0].photo" height="100" :alt="item[0].name">
           <div class="container-fluid align-self-lg-center fs-5 d-flex flex-column justify-content-center fw-semibold">
             <div>{{ item[0].last_name }}</div>
@@ -31,11 +27,7 @@
         <div :class="[{'text-bg-success': item[1].is_solved == '1'}, 'card col-4 p-1']">
           <div class="fs-5 fw-semibold">{{ item[1].name }}</div>
         </div>
-        <div :id="'members'+item[0].id" :class="[
-          {'text-bg-success': item[2].is_winner == '1'},
-          {'text-bg-danger': item[0].is_winner == '1'},
-          {'versus second': item[2].id == '2'},
-          'card col-3 d-flex flex-row p-2']">
+        <div :id="'members'+item[2].id" ref="rightMembers" :class="['card col-3 d-flex flex-row p-2']">
           <img class="rounded" :src="item[2].photo" height="100" :alt="item[2].name">
           <div class="container-fluid align-self-lg-center fs-5 d-flex flex-column justify-content-center fw-semibold">
             <div>{{ item[2].last_name }}</div>
@@ -59,7 +51,7 @@ export default {
   data() {
     return {
       title: 'CTF Final',
-      versusShow: true,
+      versusShow: false,
       members: [],
       tasks: [],
       teams: [],
@@ -111,7 +103,7 @@ export default {
         return data;
       },
       set(data) {
-        // this.showVersusWinner(data.tasks, data.members);
+        this.showVersusWinner(data.tasks, data.members);
         this.members = data.members;
         this.tasks = data.tasks;
         this.teams = data.teams;
@@ -131,7 +123,7 @@ export default {
     },
     getSolvedTaskGroup(tasks, members) {
       var solved_task = _.find(tasks, task => {
-        return task.is_solved == '1' 
+        return task.is_solved == '1'
           && _.find(this.tasks, item => {
             return item.id == task.id && item.is_solved !== task.is_solved;
           }) != undefined;
@@ -150,12 +142,26 @@ export default {
     },
     showVersusWinner(tasks, members){
       var versusGroup = this.getSolvedTaskGroup(tasks, members);
+      console.log('versusGroup', versusGroup)
       if (versusGroup != null) {
         var element_member1 = document.getElementById('members' + versusGroup.members[0].id);
         var element_member2 = document.getElementById('members' + versusGroup.members[1].id);
+        console.log(element_member1, element_member2)
+        const className1 = element_member1.className
+        const className2 = element_member2.className
+        element_member1.className = `${className1} versus first`
+        element_member2.className = `${className2} versus second`
+        setTimeout(() => {
+          element_member1.className = `${className1} versus first out`
+          element_member2.className = `${className2} versus second out`
+        }, 2000)
+        setTimeout(() => {
+          element_member1.className = className1
+          element_member2.className = className2
+          element_member1.classList.add("winner");
+          element_member2.classList.add("loser");
+        }, 4000)
 
-        element_member1.classList.add("winner");
-        element_member2.classList.add("loser");
       }
     }
   }
@@ -163,6 +169,12 @@ export default {
 </script>
 
 <style>
+.loser {
+  background: red;
+}
+.winner {
+  background: green;
+}
 .versus-bg {
   z-index: 1000;
   position: fixed;
@@ -180,12 +192,34 @@ export default {
   animation-direction: alternate;
 }
 
+.versus.first.out {
+  animation-name: versus-first-out;
+  transform: scale(1) translate(0);
+
+}
+
+.versus.second.out {
+  animation-name: versus-second-out;
+  transform: scale(1) translate(0,0);
+}
+
 .versus.first {
   animation-name: versus-first;
+  transform: scale(1.5) translate(5em,8em);
+
 }
 
 .versus.second {
   animation-name: versus-second;
+  transform: scale(1.5) translate(-5em,8em);
+}
+
+@keyframes versus-first-out {
+  0% {
+    transform: scale(1.5) translate(5em,8em);
+    background-color: green;
+  }
+  100% {transform: scale(1) translate(0,0);}
 }
 
 @keyframes versus-first {
@@ -199,15 +233,31 @@ export default {
     background-color: green;
   }
   100% {
-    transform: scale(1);
+    transform: scale(1.5) translate(5em,8em);
     background-color: green;
   }
 }
 
+@keyframes versus-second-out {
+  0% {
+    transform: scale(1.5) translate(-5em,8em);
+  }
+  100% {transform: scale(1) translate(0,0)}
+}
+
 @keyframes versus-second {
   0% {transform: scale(1);}
-  80% {
+  50% {
     transform: scale(1.5) translate(-5em,8em);
+    background-color: #fff;
+  }
+  55% {
+    transform: scale(1.5) translate(-5em,8em);
+    background-color: red;
+  }
+  100% {
+    transform: scale(1.5) translate(-5em,8em);
+    background-color: red;
   }
 }
 
